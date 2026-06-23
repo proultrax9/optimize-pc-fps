@@ -12,8 +12,20 @@ public partial class GamesPageViewModel(AppServices services, LocalizationServic
     public ObservableCollection<GameProfile> Games { get; } = [];
     public ObservableCollection<string> GameNotes { get; } = [];
 
-    [ObservableProperty]
-    private GameProfile? selectedGame;
+    private GameProfile? _selectedGame;
+    public GameProfile? SelectedGame
+    {
+        get => _selectedGame;
+        set
+        {
+            if (SetProperty(ref _selectedGame, value))
+            {
+                ShowSelectHint = value is null;
+                UpdateInstallStatus();
+                UpdateGameDetails();
+            }
+        }
+    }
 
     [ObservableProperty]
     private string fpsCapPrefix = string.Empty;
@@ -38,13 +50,6 @@ public partial class GamesPageViewModel(AppServices services, LocalizationServic
 
     [ObservableProperty]
     private bool showSelectHint = true;
-
-    partial void OnSelectedGameChanged(GameProfile? value)
-    {
-        ShowSelectHint = value is null;
-        UpdateInstallStatus();
-        UpdateGameDetails();
-    }
 
     protected override void ApplyPageStrings()
     {
