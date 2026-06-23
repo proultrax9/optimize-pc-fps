@@ -8,7 +8,7 @@ param(
 $dataRoot = Join-Path $env:LOCALAPPDATA "fps-god-pc"
 
 if (-not (Test-Path $dataRoot)) {
-    Write-Host "No data at $dataRoot — next launch is already a first run."
+    Write-Host "No data at $dataRoot - next launch is already a first run."
     exit 0
 }
 
@@ -27,15 +27,15 @@ if (-not $Force) {
 
 if ($Mode -eq "full") {
     Remove-Item -Recurse -Force $dataRoot
-    Write-Host "Removed $dataRoot — clean first-run state."
+    Write-Host "Removed $dataRoot - clean first-run state."
     exit 0
 }
 
 $guardianDb = Join-Path $dataRoot "guardian.db"
 if (Test-Path $guardianDb) {
     Remove-Item -Force $guardianDb
-    Write-Host "Removed guardian.db — onboarding modal will show on next admin launch."
+    Write-Host "Removed guardian.db - onboarding modal will show on next admin launch."
 }
 else {
-    Write-Host "guardian.db not found — onboarding will show on next launch."
+    Write-Host "guardian.db not found - onboarding will show on next launch."
 }
