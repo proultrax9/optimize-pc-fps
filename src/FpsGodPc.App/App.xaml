@@ -1,0 +1,21 @@
+﻿<Application x:Class="FpsGodPc.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:FpsGodPc.App.Converters"
+             Startup="Application_Startup"
+             Exit="Application_Exit">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Colors.xaml" />
+                <ResourceDictionary Source="Themes/ViewTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <FontFamily x:Key="AppFont">Segoe UI, Inter, sans-serif</FontFamily>
+            <FontFamily x:Key="MonoFont">Cascadia Code, Consolas, monospace</FontFamily>
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <converters:BoolToEnableLabelConverter x:Key="BoolToEnableLabelConverter"/>
+            <converters:CountFormatConverter x:Key="CountFormatConverter"/>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

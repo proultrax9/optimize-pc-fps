@@ -1,0 +1,48 @@
+<UserControl x:Class="FpsGodPc.App.Views.RestorePage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock Text="{Binding Title}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="{Binding Subtitle}" Margin="0,4,0,14" Foreground="{StaticResource TextSecondaryBrush}"/>
+            <Button Content="{Binding CreateRestorePointLabel}" Command="{Binding CreateRestorePointActionCommand}" HorizontalAlignment="Left" Padding="12,6"/>
+            <Button Content="{Binding RollbackAllTweaksLabel}" Command="{Binding RollbackAllCommand}" Margin="0,8,0,0" HorizontalAlignment="Left" Padding="12,6"/>
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,4">
+                <TextBlock Text="{Binding LastBoostPrefix}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                <TextBlock Text="{Binding LastBoost}" Foreground="{StaticResource TextSecondaryBrush}" Margin="4,0,0,0"/>
+            </StackPanel>
+            <TextBlock Text="{Binding LastBoostAt}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8"/>
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,10"/>
+
+            <TextBlock Text="{Binding RestorePointsSectionLabel}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,8"/>
+            <DataGrid ItemsSource="{Binding RestorePoints}"
+                      AutoGenerateColumns="False"
+                      HeadersVisibility="Column"
+                      RowHeaderWidth="0"
+                      Margin="0,0,0,16"
+                      Background="{StaticResource SurfaceBrush}"
+                      BorderBrush="{StaticResource BorderBrush}"
+                      Foreground="{StaticResource TextBrush}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding DataContext.GridSequenceHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding SequenceNumber}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding DataContext.GridDescriptionHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Description}" Width="3*"/>
+                    <DataGridTextColumn Header="{Binding DataContext.GridCreatedHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding CreationTime}" Width="2*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <TextBlock Text="{Binding AppliedTweaksSectionLabel}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Margin="0,0,0,8"/>
+            <DataGrid ItemsSource="{Binding AppliedEntries}"
+                      AutoGenerateColumns="False"
+                      HeadersVisibility="Column"
+                      RowHeaderWidth="0"
+                      Background="{StaticResource SurfaceBrush}"
+                      BorderBrush="{StaticResource BorderBrush}"
+                      Foreground="{StaticResource TextBrush}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding DataContext.GridTweakIdHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding DisplayName}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding DataContext.GridAppliedAtHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding AppliedAt}" Width="2*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

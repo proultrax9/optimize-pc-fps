@@ -1,0 +1,43 @@
+<UserControl x:Class="FpsGodPc.App.Views.ScannerPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:FpsGodPc.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <DockPanel Margin="0,0,0,12">
+                <Button Content="{Binding RunScanLabel}" DockPanel.Dock="Right" Width="120" Height="32"
+                        Command="{Binding RunScanCommand}"
+                        Background="{StaticResource AccentBrush}" Foreground="{StaticResource VoidBrush}" BorderBrush="{x:Null}"/>
+                <StackPanel>
+                    <TextBlock Text="{Binding Title}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+                    <TextBlock Text="{Binding Subtitle}" Margin="0,4,0,0" Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </DockPanel>
+
+            <WrapPanel Margin="0,0,0,14">
+                <controls:MetricTile Margin="0,0,10,0" Label="{Binding FpsGainLabel}" Value="{Binding FpsGain}" />
+                <controls:MetricTile Margin="0,0,10,0" Label="{Binding LatencyGainLabel}" Value="{Binding LatencyGain}" />
+                <controls:MetricTile Margin="0,0,10,0" Label="{Binding StabilityRiskLabel}" Value="{Binding StabilityRisk}" />
+                <controls:MetricTile Label="{Binding RecommendedLabel}" Value="{Binding RecommendedMode}" Detail="{Binding PerformanceScore}"/>
+            </WrapPanel>
+
+            <Button Content="{Binding ApplyRecommendedLabel}" Command="{Binding ApplyRecommendedCommand}"
+                    HorizontalAlignment="Left" Margin="0,0,0,14" Padding="12,6"
+                    Background="{StaticResource AccentBrush}" Foreground="{StaticResource VoidBrush}" BorderThickness="0"/>
+
+            <ItemsControl ItemsSource="{Binding Findings}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+                                <TextBlock Text="{Binding Detail}" Margin="0,3,0,0" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding Recommendation}" Margin="0,3,0,0" Foreground="{StaticResource AccentBrush}" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

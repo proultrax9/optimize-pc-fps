@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore FpsGodPc.sln
+
+      - name: Build
+        run: dotnet build FpsGodPc.sln -c Release --no-restore
+
+      - name: Publish portable exe
+        run: dotnet publish src/FpsGodPc.App/FpsGodPc.App.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FPS-Optimize-GOD-PC-win-x64
+          path: release/*.exe
+          if-no-files-found: error

@@ -1,0 +1,37 @@
+<UserControl x:Class="FpsGodPc.App.Views.NetworkPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Margin="20">
+        <TextBlock Text="{Binding Title}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+        <TextBlock Text="{Binding Subtitle}" Margin="0,4,0,14" Foreground="{StaticResource TextSecondaryBrush}"/>
+
+        <WrapPanel Margin="0,0,0,10">
+            <Button Content="{Binding FlushDnsLabel}" Command="{Binding FlushDnsCommand}" Margin="0,0,8,0" />
+            <Button Content="{Binding TuneAdapterLabel}" Command="{Binding TuneAdapterCommand}" />
+        </WrapPanel>
+        <TextBlock Text="{Binding StatusMessage}" Margin="0,0,0,8" Foreground="{StaticResource AccentBrush}"/>
+
+        <DockPanel Margin="0,0,0,10">
+            <TextBox Width="220" Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Content="{Binding PingTestLabel}" Width="90" Margin="8,0,0,0" Command="{Binding RunPingCommand}" />
+        </DockPanel>
+
+        <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="10">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding HostPrefix}" Foreground="{StaticResource TextBrush}"/>
+                    <TextBlock Text="{Binding PingHost}" Foreground="{StaticResource TextBrush}" Margin="4,0,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <TextBlock Text="{Binding LatencyPrefix}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding PingLatency}" Foreground="{StaticResource TextSecondaryBrush}" Margin="4,0,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <TextBlock Text="{Binding PacketLossPrefix}" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding PingPacketLoss}" Foreground="{StaticResource TextSecondaryBrush}" Margin="4,0,0,0"/>
+                </StackPanel>
+                <TextBlock Text="{Binding PingMessage}" Foreground="{StaticResource AccentBrush}" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

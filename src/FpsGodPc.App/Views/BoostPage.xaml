@@ -1,0 +1,32 @@
+<UserControl x:Class="FpsGodPc.App.Views.BoostPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:FpsGodPc.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock Text="{Binding Title}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="{Binding Subtitle}" Margin="0,4,0,14" Foreground="{StaticResource TextSecondaryBrush}"/>
+            <Button Content="{Binding RestartAsAdminLabel}" HorizontalAlignment="Left" Command="{Binding RestartAsAdminCommand}" Margin="0,0,0,12"/>
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,12"/>
+            <ItemsControl ItemsSource="{Binding Presets}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <controls:BoostCard PresetId="{Binding Id}"
+                                            Title="{Binding Name}"
+                                            Description="{Binding Description}"
+                                            ApplyPresetLabel="{Binding ApplyButtonLabel}"
+                                            ApplyCommand="{Binding DataContext.ApplyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Margin="0,0,0,10">
+                            <controls:BoostCard.TweakCountLabel>
+                                <MultiBinding Converter="{StaticResource CountFormatConverter}">
+                                    <Binding Path="TweakIds.Count"/>
+                                    <Binding Path="DataContext.TweakCountFormat" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                </MultiBinding>
+                            </controls:BoostCard.TweakCountLabel>
+                        </controls:BoostCard>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

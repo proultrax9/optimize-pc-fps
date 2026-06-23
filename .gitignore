@@ -1,0 +1,39 @@
+# Logs
+logs
+*.log
+build2.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Rust / Tauri legacy
+src-tauri/
+archive/
+
+# .NET
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Release artifacts (build locally with build.bat)
+release/
+*.pdb
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.ntvs*
+*.njsproj
+*.sw?

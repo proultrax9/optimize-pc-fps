@@ -1,0 +1,48 @@
+<UserControl x:Class="FpsGodPc.App.Views.BenchmarkPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock Text="{Binding Title}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="{Binding Subtitle}" Margin="0,4,0,14" Foreground="{StaticResource TextSecondaryBrush}"/>
+
+            <Border Background="{StaticResource CardBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="10" Padding="12">
+                <WrapPanel VerticalAlignment="Center">
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="{Binding LabelFieldLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                        <TextBox Width="240" Text="{Binding Label, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="{Binding DurationLabel}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11"/>
+                        <TextBox Width="90" Text="{Binding DurationSeconds, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <Button Content="{Binding RunBenchmarkLabel}" Height="30" Margin="0,16,0,0"
+                            Command="{Binding RunAsyncCommand}"
+                            IsEnabled="{Binding IsRunning, Converter={StaticResource InverseBoolConverter}}"
+                            Background="{StaticResource AccentBrush}" Foreground="{StaticResource VoidBrush}" BorderBrush="{x:Null}"/>
+                </WrapPanel>
+            </Border>
+
+            <TextBlock Text="{Binding PresentMonStatus}" Margin="0,0,0,4" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding CompareSummary}" Margin="0,0,0,8" Foreground="{StaticResource AccentBrush}" FontSize="12" TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding StatusMessage}" Margin="0,0,0,10" Foreground="{StaticResource AccentBrush}"/>
+
+            <DataGrid ItemsSource="{Binding Sessions}"
+                      AutoGenerateColumns="False"
+                      HeadersVisibility="Column"
+                      RowHeaderWidth="0"
+                      Background="{StaticResource SurfaceBrush}"
+                      BorderBrush="{StaticResource BorderBrush}"
+                      Foreground="{StaticResource TextBrush}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="{Binding DataContext.GridLabelHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Label}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding DataContext.GridTakenHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding TakenAt}" Width="2*"/>
+                    <DataGridTextColumn Header="{Binding DataContext.GridDurationHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding DurationSecs}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding DataContext.GridFpsHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding AvgFps}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding DataContext.GridPct1LowHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding Pct1Low}" Width="*"/>
+                    <DataGridTextColumn Header="{Binding DataContext.GridCpuPctHeader, RelativeSource={RelativeSource AncestorType=UserControl}}" Binding="{Binding AvgCpuPct}" Width="*"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
