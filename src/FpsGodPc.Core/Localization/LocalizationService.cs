@@ -256,7 +256,7 @@ public sealed partial class LocalizationService
     public string SettingsAppDataPrefix => T("App data:", "ข้อมูลแอป:");
     public string SettingsGuardianDataPrefix => T("Guardian data:", "ข้อมูล Guardian:");
     public string SettingsVersionLabel => T("Version", "เวอร์ชัน");
-    public string AppVersion => T("FPS Optimize GOD PC v0.1.0", "FPS Optimize GOD PC v0.1.0");
+    public string AppVersion => T("FPS Optimize GOD PC v0.1.1", "FPS Optimize GOD PC v0.1.1");
 
     // Profiles
     public string ProfilesApply => T("Apply", "ใช้");

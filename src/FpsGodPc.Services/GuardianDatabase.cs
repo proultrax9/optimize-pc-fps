@@ -444,7 +444,12 @@ public sealed class GuardianDatabase
         SetCrashDirty(false);
     }
 
-    private SqliteConnection Open() => new($"Data Source={_path}");
+    private SqliteConnection Open()
+    {
+        var conn = new SqliteConnection($"Data Source={_path}");
+        conn.Open();
+        return conn;
+    }
 
     private void Migrate()
     {

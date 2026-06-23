@@ -29,7 +29,7 @@ if not exist "release\FPS Optimize GOD PC.exe" (
 
 echo.
 echo ========================================
-echo   FPS Optimize GOD PC v0.1.0 - BUILD OK
+echo   FPS Optimize GOD PC v0.1.1 - BUILD OK
 echo ========================================
 echo   %~dp0release\FPS Optimize GOD PC.exe
 echo ========================================
