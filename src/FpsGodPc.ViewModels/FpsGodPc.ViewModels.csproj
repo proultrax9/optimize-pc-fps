@@ -16,10 +16,10 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
-  <!-- Keep roslyn4.0 analyzer (8.2.2); drop versioned duplicates that cause CS0102 on clean builds -->
+  <!-- Keep a single MVVM source generator (roslyn4.3) to avoid duplicate CS0102 on clean builds -->
   <Target Name="FilterDuplicateMvvmAnalyzers" BeforeTargets="CoreCompile">
     <ItemGroup>
-      <Analyzer Remove="@(Analyzer)" Condition="$([System.String]::Copy('%(FullPath)').Contains('CommunityToolkit.Mvvm.SourceGenerators')) AND ($([System.String]::Copy('%(FullPath)').Contains('roslyn4.3')) OR $([System.String]::Copy('%(FullPath)').Contains('roslyn4.12')) OR $([System.String]::Copy('%(FullPath)').Contains('roslyn5.0')))" />
+      <Analyzer Remove="@(Analyzer)" Condition="$([System.String]::Copy('%(FullPath)').Contains('CommunityToolkit.Mvvm.SourceGenerators')) AND ($([System.String]::Copy('%(FullPath)').Contains('roslyn4.0')) OR $([System.String]::Copy('%(FullPath)').Contains('roslyn4.12')) OR $([System.String]::Copy('%(FullPath)').Contains('roslyn5.0')))" />
     </ItemGroup>
   </Target>
 
