@@ -1,21 +1,33 @@
 <UserControl x:Class="FpsGodPc.App.Controls.Card"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Border Background="{StaticResource CardBrush}"
+    <Border Background="{StaticResource CardSheenBrush}"
             BorderBrush="{StaticResource BorderBrush}"
             BorderThickness="1"
-            CornerRadius="10"
-            Padding="14">
+            CornerRadius="15"
+            Padding="20">
+        <Border.Effect>
+            <DropShadowEffect Color="#000000" BlurRadius="18" ShadowDepth="0" Opacity="0.35"/>
+        </Border.Effect>
         <StackPanel>
+            <!-- Accent top bar -->
+            <Border Width="32" Height="3" CornerRadius="2"
+                    Background="{StaticResource AccentBrush}"
+                    HorizontalAlignment="Left"
+                    Margin="0,0,0,10"/>
             <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}"
                        FontSize="11"
+                       FontFamily="{StaticResource AppFont}"
                        Foreground="{StaticResource TextSecondaryBrush}"
                        FontWeight="SemiBold"
                        TextWrapping="Wrap"/>
             <TextBlock Text="{Binding Subtitle, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                       Margin="0,2,0,10"
+                       Margin="0,4,0,14"
+                       FontFamily="{StaticResource DisplayFont}"
+                       FontSize="16"
+                       FontWeight="Bold"
                        Foreground="{StaticResource TextBrush}"
-                       TextWrapping="Wrap" />
+                       TextWrapping="Wrap"/>
             <ContentPresenter Content="{Binding Content, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
         </StackPanel>
     </Border>

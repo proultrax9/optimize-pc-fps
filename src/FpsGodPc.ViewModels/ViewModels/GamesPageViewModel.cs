@@ -9,6 +9,8 @@ namespace FpsGodPc.App.ViewModels;
 
 public partial class GamesPageViewModel(AppServices services, LocalizationService l10n) : PageViewModelBase(services, l10n, "games")
 {
+    private bool _isRefreshing;
+
     public ObservableCollection<GameProfile> Games { get; } = [];
     public ObservableCollection<string> GameNotes { get; } = [];
 
@@ -51,6 +53,9 @@ public partial class GamesPageViewModel(AppServices services, LocalizationServic
     [ObservableProperty]
     private bool showSelectHint = true;
 
+    [ObservableProperty]
+    private bool isBusy;
+
     protected override void ApplyPageStrings()
     {
         base.ApplyPageStrings();
@@ -64,18 +69,38 @@ public partial class GamesPageViewModel(AppServices services, LocalizationServic
     }
 
     [RelayCommand]
-    public void Refresh()
+    public async Task Refresh()
     {
-        Games.Clear();
-        foreach (var game in Services.GetGameProfiles())
+        if (_isRefreshing)
         {
-            Games.Add(game);
+            return;
         }
 
-        SelectedGame ??= Games.FirstOrDefault();
-        ShowSelectHint = SelectedGame is null;
-        UpdateInstallStatus();
-        UpdateGameDetails();
+        _isRefreshing = true;
+        IsBusy = true;
+        try
+        {
+            var profiles = await Task.Run(() => Services.GetGameProfiles());
+
+            await UiDispatch.InvokeAsync(() =>
+            {
+                Games.Clear();
+                foreach (var game in profiles)
+                {
+                    Games.Add(game);
+                }
+
+                SelectedGame ??= Games.FirstOrDefault();
+                ShowSelectHint = SelectedGame is null;
+                UpdateInstallStatus();
+                UpdateGameDetails();
+            });
+        }
+        finally
+        {
+            _isRefreshing = false;
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]
@@ -90,15 +115,17 @@ public partial class GamesPageViewModel(AppServices services, LocalizationServic
     }
 
     [RelayCommand]
-    public void ApplyProfile()
+    public async Task ApplyProfile()
     {
         if (SelectedGame is null)
         {
             return;
         }
 
-        StatusMessage = Services.ApplyProfile(SelectedGame.Id).Message;
-        Refresh();
+        var gameId = SelectedGame.Id;
+        var result = await Task.Run(() => Services.ApplyProfile(gameId));
+        StatusMessage = result.Message;
+        await Refresh();
     }
 
     private void UpdateInstallStatus()

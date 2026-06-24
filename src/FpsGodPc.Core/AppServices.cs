@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Text.Json;
 using FpsGodPc.Core.Guardian;
 using FpsGodPc.Core.Localization;
 using FpsGodPc.Core.Models;
+using FpsGodPc.Core;
 using FpsGodPc.Core.Tweaks;
 using FpsGodPc.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +28,9 @@ public sealed class AppServices
     private readonly PresentMonService _presentMonService;
     private readonly GameWatcherService _gameWatcherService;
     private readonly GameInstallDetector _gameInstallDetector;
+    private readonly PowerPlanService _powerPlanService;
+    private readonly UnigineBenchmarkService _unigineBenchmarkService;
+    private readonly SpaceBattleBenchmarkService _spaceBattleBenchmarkService;
     private readonly LocalizationService _l10n;
 
     public AppServices(
@@ -44,6 +49,9 @@ public sealed class AppServices
         PresentMonService presentMonService,
         GameWatcherService gameWatcherService,
         GameInstallDetector gameInstallDetector,
+        PowerPlanService powerPlanService,
+        UnigineBenchmarkService unigineBenchmarkService,
+        SpaceBattleBenchmarkService spaceBattleBenchmarkService,
         LocalizationService l10n)
     {
         _processRunner = processRunner;
@@ -61,6 +69,9 @@ public sealed class AppServices
         _presentMonService = presentMonService;
         _gameWatcherService = gameWatcherService;
         _gameInstallDetector = gameInstallDetector;
+        _powerPlanService = powerPlanService;
+        _unigineBenchmarkService = unigineBenchmarkService;
+        _spaceBattleBenchmarkService = spaceBattleBenchmarkService;
         _l10n = l10n;
         _l10n.SetLanguage(_stateStore.GetSettings().Language);
     }
@@ -132,11 +143,33 @@ public sealed class AppServices
 
     public IReadOnlyList<PresetBundle> GetBoostPresets() =>
     [
-        new PresetBundle { Id = "safe", Name = _l10n.BoostName("safe"), Description = _l10n.BoostDescription("safe"), TweakIds = BoostService.GetPresetIds("safe").ToList(), ApplyButtonLabel = _l10n.BoostApplyPreset },
-        new PresetBundle { Id = "competitive", Name = _l10n.BoostName("competitive"), Description = _l10n.BoostDescription("competitive"), TweakIds = BoostService.GetPresetIds("competitive").ToList(), ApplyButtonLabel = _l10n.BoostApplyPreset },
-        new PresetBundle { Id = "extreme", Name = _l10n.BoostName("extreme"), Description = _l10n.BoostDescription("extreme"), TweakIds = BoostService.GetPresetIds("extreme").ToList(), ApplyButtonLabel = _l10n.BoostApplyPreset },
-        new PresetBundle { Id = "expert", Name = _l10n.BoostName("expert"), Description = _l10n.BoostDescription("expert"), TweakIds = BoostService.GetPresetIds("expert").ToList(), IsAdvisorOnly = true, ApplyButtonLabel = _l10n.BoostViewChecklist },
+        BuildBoostPreset("safe"),
+        BuildBoostPreset("competitive"),
+        BuildBoostPreset("extreme"),
+        BuildBoostPreset("expert", advisorOnly: true),
     ];
+
+    private PresetBundle BuildBoostPreset(string id, bool advisorOnly = false)
+    {
+        var tweakIds = BoostService.GetPresetIds(id).ToList();
+        var tweakNames = tweakIds.Select(tid => _l10n.TweakName(tid)).ToList();
+        return new PresetBundle
+        {
+            Id = id,
+            Name = _l10n.BoostName(id),
+            Description = _l10n.BoostTagline(id),
+            RiskLevel = _l10n.BoostRiskLevel(id),
+            RiskLabel = _l10n.BoostRiskLabel(id),
+            Warning = _l10n.BoostWarning(id),
+            TweakIds = tweakIds,
+            TweakNames = tweakNames.Take(6).ToList(),
+            MoreTweakCount = Math.Max(0, tweakNames.Count - 6),
+            IncludesLabel = _l10n.BoostIncludes(tweakNames.Count),
+            RequiresRestorePoint = id is "competitive" or "extreme",
+            IsAdvisorOnly = advisorOnly,
+            ApplyButtonLabel = advisorOnly ? _l10n.BoostViewChecklist : _l10n.BoostApplyBoost,
+        };
+    }
 
     public ApplyBoostResult ApplyBoostPreset(string presetId) =>
         LocalizeBoost(_boostService.ApplyBoost(presetId));
@@ -481,6 +514,151 @@ public sealed class AppServices
         }
     }
 
+    public CommandResult ApplyGodModePowerPlan() => Localize(_powerPlanService.ApplyGodModePlan());
+
+    public UnigineBenchmarkStatus GetUnigineBenchmarkStatus() => _unigineBenchmarkService.GetStatus();
+
+    public UnigineBenchmarkStatus GetGpuBenchmarkStatus() =>
+        _spaceBattleBenchmarkService.GetStatus();
+
+    public Task<CommandResult> EnsureGpuBenchmarkAsync(
+        IProgress<string>? progress = null,
+        CancellationToken cancellationToken = default) =>
+        EnsureGpuBenchmarkInternalAsync(progress, cancellationToken);
+
+    private async Task<CommandResult> EnsureGpuBenchmarkInternalAsync(
+        IProgress<string>? progress,
+        CancellationToken cancellationToken)
+    {
+        if (_spaceBattleBenchmarkService.GetStatus().Available)
+        {
+            await _presentMonService.EnsureInstalledAsync(progress, cancellationToken).ConfigureAwait(false);
+            return CommandResult.Ok(_spaceBattleBenchmarkService.GetStatus().Message);
+        }
+
+        var (spaceOk, spaceMessage) = await _spaceBattleBenchmarkService
+            .EnsureInstalledAsync(progress, cancellationToken)
+            .ConfigureAwait(false);
+        if (spaceOk)
+        {
+            await _presentMonService.EnsureInstalledAsync(progress, cancellationToken).ConfigureAwait(false);
+            return CommandResult.Ok(spaceMessage);
+        }
+
+        return await EnsureUnigineBenchmarkInternalAsync(progress, cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task<CommandResult> EnsureUnigineBenchmarkAsync(
+        IProgress<string>? progress = null,
+        CancellationToken cancellationToken = default) =>
+        EnsureUnigineBenchmarkInternalAsync(progress, cancellationToken);
+
+    private async Task<CommandResult> EnsureUnigineBenchmarkInternalAsync(
+        IProgress<string>? progress,
+        CancellationToken cancellationToken)
+    {
+        var (success, message) = await _unigineBenchmarkService.EnsureInstalledAsync(progress, cancellationToken)
+            .ConfigureAwait(false);
+        if (!success)
+        {
+            return CommandResult.Err(message);
+        }
+
+        await _presentMonService.EnsureInstalledAsync(progress, cancellationToken).ConfigureAwait(false);
+        return CommandResult.Ok(message);
+    }
+
+    public Task<CommandResult> EnsurePresentMonAsync(
+        IProgress<string>? progress = null,
+        CancellationToken cancellationToken = default) =>
+        EnsurePresentMonInternalAsync(progress, cancellationToken);
+
+    private async Task<CommandResult> EnsurePresentMonInternalAsync(
+        IProgress<string>? progress,
+        CancellationToken cancellationToken)
+    {
+        var (success, message) = await _presentMonService.EnsureInstalledAsync(progress, cancellationToken)
+            .ConfigureAwait(false);
+        return success ? CommandResult.Ok(message) : CommandResult.Err(message);
+    }
+
+    public (bool Success, string Message, UnigineBenchmarkSession? Session) StartUnigineBenchmark(uint durationSecs) =>
+        _unigineBenchmarkService.StartBenchmark(durationSecs);
+
+    public async Task<CommandResult> RunAutomatedHeavenBenchmarkAsync(
+        string label,
+        uint durationSecs,
+        IProgress<string>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        var resolvedLabel = string.IsNullOrWhiteSpace(label) ? _l10n.BenchmarkDefaultLabel : label;
+        var useSpaceBattle = _spaceBattleBenchmarkService.GetStatus().Available;
+        var result = useSpaceBattle
+            ? await _spaceBattleBenchmarkService
+                .RunAutomatedBenchmarkAsync(durationSecs, progress, cancellationToken)
+                .ConfigureAwait(false)
+            : await _unigineBenchmarkService
+                .RunAutomatedBenchmarkAsync(durationSecs, progress, cancellationToken)
+                .ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return CommandResult.Err(result.Message);
+        }
+
+        var telemetry = _telemetryService.Collect();
+        var record = new BenchmarkSession
+        {
+            Label = resolvedLabel,
+            TakenAt = DateTimeOffset.Now.ToString("s"),
+            DurationSecs = result.DurationSecs,
+            AvgFps = result.AvgFps,
+            Pct1Low = result.MinFps,
+            AvgFrametimeMs = result.AvgFps is float fps && fps > 0f ? 1000f / fps : null,
+            AvgCpuPct = telemetry.CpuUsagePct,
+            AvgGpuPct = telemetry.GpuUsagePct,
+            Source = string.IsNullOrWhiteSpace(result.ScoreSource) ? result.Engine : result.ScoreSource,
+            Notes = result.MinFps is float min && result.MaxFps is float max
+                ? $"3D benchmark — min {min:F1} / max {max:F1} FPS"
+                : result.AvgFps is float avg
+                    ? $"3D benchmark — {avg:F1} FPS average"
+                    : "3D fly-through benchmark",
+        };
+        _guardianDatabase.SaveBenchmark(record);
+        return CommandResult.Ok(result.Message);
+    }
+
+    public CommandResult CompleteUnigineBenchmark(string label, UnigineBenchmarkSession session)
+    {
+        var resolvedLabel = string.IsNullOrWhiteSpace(label) ? _l10n.BenchmarkDefaultLabel : label;
+        var result = _unigineBenchmarkService.CompleteBenchmark(session);
+        if (!result.Success)
+        {
+            return CommandResult.Err(result.Message);
+        }
+
+        var telemetry = _telemetryService.Collect();
+        var record = new BenchmarkSession
+        {
+            Label = resolvedLabel,
+            TakenAt = DateTimeOffset.Now.ToString("s"),
+            DurationSecs = result.DurationSecs > 0 ? result.DurationSecs : session.DurationSecs,
+            AvgFps = result.AvgFps,
+            Pct1Low = result.MinFps,
+            AvgFrametimeMs = result.AvgFps is float fps && fps > 0f ? 1000f / fps : null,
+            AvgCpuPct = telemetry.CpuUsagePct,
+            AvgGpuPct = telemetry.GpuUsagePct,
+            Source = string.IsNullOrWhiteSpace(result.ScoreSource) ? result.Engine : result.ScoreSource,
+            Notes = result.MinFps is float min && result.MaxFps is float max
+                ? $"3D benchmark — min {min:F1} / max {max:F1} FPS"
+                : result.AvgFps is float avg
+                    ? $"3D benchmark — {avg:F1} FPS average"
+                    : "3D fly-through benchmark",
+        };
+        _guardianDatabase.SaveBenchmark(record);
+        return CommandResult.Ok(result.Message);
+    }
+
     public AppSettings GetAppSettings() => _stateStore.GetSettings();
 
     public CommandResult SaveAppSettings(AppSettings settings)
@@ -598,6 +776,7 @@ public static class AppServicesRegistration
         services.AddSingleton<AppStateStore>();
         services.AddSingleton<GuardianDatabase>();
         services.AddSingleton<ElevationHelper>();
+        services.AddSingleton<HardwareMonitorService>();
         services.AddSingleton<TelemetryService>();
         services.AddSingleton<SystemInfoService>();
         services.AddSingleton<LocalizationService>();
@@ -608,6 +787,9 @@ public static class AppServicesRegistration
         services.AddSingleton<RestoreService>();
         services.AddSingleton<CleanerService>();
         services.AddSingleton<GameInstallDetector>();
+        services.AddSingleton<PowerPlanService>();
+        services.AddSingleton<UnigineBenchmarkService>();
+        services.AddSingleton<SpaceBattleBenchmarkService>();
         services.AddSingleton<PresentMonService>();
         services.AddSingleton<GameWatcherService>(sp =>
         {

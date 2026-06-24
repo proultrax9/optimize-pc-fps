@@ -17,8 +17,11 @@ public sealed class BoostService
     public static IReadOnlyList<string> GetPresetIds(string preset) => preset switch
     {
         "safe" => ["win-game-mode", "win-power-high", "win-visual-fx", "win-bg-apps", "gpu-shader-cache", "cpu-game-priority", "net-dns-flush"],
-        "competitive" => ["win-game-mode", "win-power-high", "win-visual-fx", "win-game-dvr", "win-telemetry", "win-fullscreen-opt", "win-bg-apps", "gpu-shader-cache", "gpu-max-perf", "gpu-low-latency", "cpu-game-priority", "cpu-timer-res", "net-dns-flush", "net-adapter-power", "net-nagle", "win-disable-power-saving", "win-priority-26", "win-mmcss-latency"],
-        "extreme" => ["win-game-mode", "win-power-high", "win-visual-fx", "win-game-dvr", "win-telemetry", "win-fullscreen-opt", "win-bg-apps", "gpu-shader-cache", "gpu-max-perf", "gpu-low-latency", "cpu-game-priority", "cpu-core-parking", "cpu-timer-res", "net-dns-flush", "net-adapter-power", "net-nagle", "net-throttling", "win-priority-26", "win-mmcss-latency", "win-system-ini-fps", "win-disable-power-saving", "adv-ram-standby"],
+        // GPU driver-registry hacks and the system.ini edit are intentionally NOT included:
+        // they can destabilize the GPU driver and trip game anti-cheat (they crashed Apex/EA AntiCheat).
+        // They remain in the catalog as guidance-only entries.
+        "competitive" => ["win-game-mode", "win-power-high", "win-visual-fx", "win-game-dvr", "win-telemetry", "win-fullscreen-opt", "win-bg-apps", "gpu-shader-cache", "cpu-game-priority", "cpu-timer-res", "net-dns-flush", "net-adapter-power", "net-nagle", "win-disable-power-saving", "win-priority-26", "win-mmcss-latency"],
+        "extreme" => ["win-game-mode", "win-power-high", "win-visual-fx", "win-game-dvr", "win-telemetry", "win-fullscreen-opt", "win-bg-apps", "gpu-shader-cache", "cpu-game-priority", "cpu-core-parking", "cpu-timer-res", "net-dns-flush", "net-adapter-power", "net-nagle", "net-throttling", "win-priority-26", "win-mmcss-latency", "win-disable-power-saving", "adv-ram-standby"],
         "expert" => ["gpu-hags-advisor", "cpu-undervolt", "adv-vbs-warn", "adv-bios-xmp"],
         _ => [],
     };

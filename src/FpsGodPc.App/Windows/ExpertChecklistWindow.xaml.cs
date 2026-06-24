@@ -120,7 +120,7 @@ public partial class ExpertChecklistWindow : Window
         var msg = _l10n.T(
             "Advanced tuning can cause instability or data loss. Accept responsibility and continue?",
             "การปรับขั้นสูงอาจทำให้ไม่เสถียรหรือสูญเสียข้อมูล ยอมรับความเสี่ยงและดำเนินการต่อไหม?");
-        if (MessageBox.Show(msg, _l10n.ConfirmTitle(), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+        if (!ThemedDialog.Confirm(this, msg, _l10n.ConfirmTitle(), FpsGodPc.App.ViewModels.DialogKind.Warning))
         {
             return;
         }
@@ -138,7 +138,7 @@ public partial class ExpertChecklistWindow : Window
             var msg = _l10n.T(
                 "Mark expert guides complete only after following the steps or accepting risk. Waive risk first?",
                 "ทำเครื่องหมายว่าทำครบหลังทำตามขั้นตอนหรือยอมรับความเสี่ยง ยอมรับความเสี่ยงก่อนไหม?");
-            if (MessageBox.Show(msg, _l10n.ConfirmTitle(), MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            if (ThemedDialog.Confirm(this, msg, _l10n.ConfirmTitle(), FpsGodPc.App.ViewModels.DialogKind.Question))
             {
                 _services.WaiveExpertRisk();
             }
@@ -150,7 +150,7 @@ public partial class ExpertChecklistWindow : Window
 
         var result = _services.ApplyBoostPreset("expert");
         LastStatusMessage = _l10n.LocalizeResult(result.Message);
-        MessageBox.Show(LastStatusMessage, _l10n.ExpertChecklistTitle, MessageBoxButton.OK, MessageBoxImage.Information);
+        ThemedDialog.Alert(this, LastStatusMessage, _l10n.ExpertChecklistTitle, FpsGodPc.App.ViewModels.DialogKind.Info);
         DialogResult = true;
         Close();
     }

@@ -3,11 +3,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:FpsGodPc.App.Controls">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="20">
-            <TextBlock Text="{Binding Title}" FontSize="28" FontWeight="Bold" Foreground="{StaticResource TextBrush}"/>
-            <TextBlock Text="{Binding Subtitle}" Margin="0,4,0,14" Foreground="{StaticResource TextSecondaryBrush}"/>
-            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Width="200" Margin="0,0,0,12"/>
-            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,8"/>
+        <StackPanel Margin="28,24,28,28">
+            <controls:PageHeader Eyebrow="TWEAKS" Title="{Binding Title}" Subtitle="{Binding Subtitle}" Margin="0,0,0,18"/>
+
+            <Border Style="{StaticResource CardSurface}" Margin="0,0,0,16" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="CATEGORY" Style="{StaticResource SectionLabel}" Margin="0,0,0,8"/>
+                    <ComboBox ItemsSource="{Binding Categories}"
+                              SelectedItem="{Binding SelectedCategory}"
+                              DisplayMemberPath="Label"
+                              MinWidth="260"
+                              MinHeight="42"
+                              HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+
             <ItemsControl ItemsSource="{Binding Tweaks}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
@@ -16,7 +28,7 @@
                                            Risk="{Binding RiskTier}"
                                            IsToggled="{Binding IsEnabled}"
                                            ToggleCommand="{Binding ToggleCommand}"
-                                           Margin="0,0,0,8"/>
+                                           Margin="0,0,0,10"/>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

@@ -1,34 +1,125 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Color x:Key="VoidColor">#FF030304</Color>
-    <Color x:Key="AppBgColor">#FF060608</Color>
-    <Color x:Key="SidebarColor">#FF08080B</Color>
-    <Color x:Key="SurfaceColor">#FF0E0E12</Color>
-    <Color x:Key="ElevatedColor">#FF14141A</Color>
-    <Color x:Key="CardColor">#FF101014</Color>
-    <Color x:Key="BorderColor">#FF1C1C26</Color>
-    <Color x:Key="AccentColor">#FFA78BFA</Color>
-    <Color x:Key="AccentMutedColor">#33A78BFA</Color>
-    <Color x:Key="TextColor">#FFFAFAFA</Color>
-    <Color x:Key="TextSecondaryColor">#FFA1A1AA</Color>
-    <Color x:Key="MutedColor">#FF52525B</Color>
-    <Color x:Key="SuccessColor">#FF34D399</Color>
-    <Color x:Key="WarningColor">#FFFBBF24</Color>
-    <Color x:Key="DangerColor">#FFF87171</Color>
 
+    <!-- ====================================================================== -->
+    <!--  HyperTune-inspired palette                                            -->
+    <!--  Near-black surfaces (#0E1011) layered with charcoal greys, mint-green -->
+    <!--  (#13F287) accent. Keys are kept identical to the previous theme so    -->
+    <!--  every existing view re-themes automatically.                          -->
+    <!-- ====================================================================== -->
+
+    <!-- ============ Surfaces (dark → elevated) ============ -->
+    <Color x:Key="VoidColor">#FF080A0B</Color>
+    <Color x:Key="AppBgColor">#FF0E1011</Color>
+    <Color x:Key="SidebarColor">#FF0B0D0E</Color>
+    <Color x:Key="SurfaceColor">#FF131516</Color>
+    <Color x:Key="SurfaceAltColor">#FF1A1B1D</Color>
+    <Color x:Key="ElevatedColor">#FF1D2021</Color>
+    <Color x:Key="CardColor">#FF141719</Color>
+
+    <!-- ============ Borders (subtle) ============ -->
+    <Color x:Key="BorderColor">#FF202325</Color>
+    <Color x:Key="BorderStrongColor">#FF2B2F31</Color>
+
+    <!-- ============ Mint-green accent (HyperTune) ============ -->
+    <Color x:Key="AccentColor">#FF13F287</Color>
+    <Color x:Key="AccentStrongColor">#FF00C46E</Color>
+    <Color x:Key="AccentDeepColor">#FF009050</Color>
+    <Color x:Key="AccentMutedColor">#4D13F287</Color>
+    <Color x:Key="AccentSoftColor">#1A13F287</Color>
+    <Color x:Key="AccentGlowTintColor">#FF0E231A</Color>
+
+    <!-- ============ Text ============ -->
+    <Color x:Key="TextColor">#FFFFFFFF</Color>
+    <Color x:Key="TextSecondaryColor">#FF8D8E8E</Color>
+    <Color x:Key="MutedColor">#FF535555</Color>
+
+    <!-- ============ Semantic ============ -->
+    <Color x:Key="SuccessColor">#FF13F287</Color>
+    <Color x:Key="WarningColor">#FFFF9F18</Color>
+    <Color x:Key="DangerColor">#FFFF4555</Color>
+    <Color x:Key="PremiumColor">#FF733CFF</Color>
+
+    <!-- ============ Solid brushes ============ -->
     <SolidColorBrush x:Key="VoidBrush" Color="{StaticResource VoidColor}" />
     <SolidColorBrush x:Key="AppBgBrush" Color="{StaticResource AppBgColor}" />
     <SolidColorBrush x:Key="SidebarBrush" Color="{StaticResource SidebarColor}" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}" />
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="{StaticResource SurfaceAltColor}" />
     <SolidColorBrush x:Key="ElevatedBrush" Color="{StaticResource ElevatedColor}" />
     <SolidColorBrush x:Key="CardBrush" Color="{StaticResource CardColor}" />
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}" />
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="{StaticResource BorderStrongColor}" />
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentStrongBrush" Color="{StaticResource AccentStrongColor}" />
+    <SolidColorBrush x:Key="AccentDeepBrush" Color="{StaticResource AccentDeepColor}" />
     <SolidColorBrush x:Key="AccentMutedBrush" Color="{StaticResource AccentMutedColor}" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="{StaticResource AccentSoftColor}" />
+    <SolidColorBrush x:Key="AccentGlowTintBrush" Color="{StaticResource AccentGlowTintColor}" />
     <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}" />
     <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource MutedColor}" />
     <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource SuccessColor}" />
     <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningColor}" />
     <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerColor}" />
+    <SolidColorBrush x:Key="PremiumBrush" Color="{StaticResource PremiumColor}" />
+
+    <!-- ============ Gradients (gloss / glow) ============ -->
+    <!-- Primary green fill, used for hero buttons / accents -->
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource AccentColor}" Offset="0" />
+        <GradientStop Color="{StaticResource AccentDeepColor}" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Soft horizontal green wash (HyperTune toggle "on" gradient) -->
+    <LinearGradientBrush x:Key="AccentGlowBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+        <GradientStop Color="#FF0E1011" Offset="0" />
+        <GradientStop Color="#FF1F4836" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Red "off/danger" toggle gradient -->
+    <LinearGradientBrush x:Key="DangerGlowBrush" StartPoint="0,0.5" EndPoint="1,0.5">
+        <GradientStop Color="#FF59211E" Offset="0" />
+        <GradientStop Color="#FF0E1011" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Top hero radial glow (green bloom fading into the near-black bg) -->
+    <RadialGradientBrush x:Key="HeroGlowBrush" GradientOrigin="0.5,0" Center="0.5,0" RadiusX="0.9" RadiusY="0.6">
+        <GradientStop Color="#2613F287" Offset="0" />
+        <GradientStop Color="#000E1011" Offset="1" />
+    </RadialGradientBrush>
+
+    <!-- Subtle card sheen (top-down glossy panel) -->
+    <LinearGradientBrush x:Key="CardSheenBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FF1A1E20" Offset="0" />
+        <GradientStop Color="#FF121517" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- ============ Gauge / beam (HyperTune Optimize visuals) ============ -->
+    <!-- Track ring behind a radial gauge value arc -->
+    <SolidColorBrush x:Key="GaugeTrackBrush" Color="#FF20262A" />
+    <SolidColorBrush x:Key="GaugeArcBrush" Color="{StaticResource AccentColor}" />
+    <!-- Vertical green light beam behind hardware glyphs -->
+    <LinearGradientBrush x:Key="BeamBrush" StartPoint="0.5,0" EndPoint="0.5,1">
+        <GradientStop Color="#0013F287" Offset="0" />
+        <GradientStop Color="#5513F287" Offset="0.5" />
+        <GradientStop Color="#0013F287" Offset="1" />
+    </LinearGradientBrush>
+    <!-- Radial green bloom placed behind gauges -->
+    <RadialGradientBrush x:Key="GaugeGlowBrush" GradientOrigin="0.5,0.5" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+        <GradientStop Color="#3313F287" Offset="0" />
+        <GradientStop Color="#0013F287" Offset="1" />
+    </RadialGradientBrush>
+    <!-- Reusable green outer glow (apply to active gauges/cards via Effect) -->
+    <DropShadowEffect x:Key="AccentGlowEffect" Color="#FF13F287" BlurRadius="24" ShadowDepth="0" Opacity="0.5" />
+
+    <!-- ============ Risk badge brushes ============ -->
+    <SolidColorBrush x:Key="RiskSafeBgBrush" Color="#1A13F287"/>
+    <SolidColorBrush x:Key="RiskSafeBorderBrush" Color="#4D13F287"/>
+    <SolidColorBrush x:Key="RiskMediumBgBrush" Color="#1AFF9F18"/>
+    <SolidColorBrush x:Key="RiskMediumBorderBrush" Color="#4DFF9F18"/>
+    <SolidColorBrush x:Key="RiskHighBgBrush" Color="#1AFF4555"/>
+    <SolidColorBrush x:Key="RiskHighBorderBrush" Color="#4DFF4555"/>
+    <SolidColorBrush x:Key="RiskExtremeBgBrush" Color="#26FF4555"/>
+    <SolidColorBrush x:Key="RiskExtremeBorderBrush" Color="#80FF4555"/>
 </ResourceDictionary>

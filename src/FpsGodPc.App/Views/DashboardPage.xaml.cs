@@ -15,16 +15,36 @@ public partial class DashboardPage : UserControl
         Unloaded += OnUnloaded;
     }
 
-    private void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
+    private async void OnLoaded(object sender, System.Windows.RoutedEventArgs e)
     {
         if (DataContext is not DashboardPageViewModel vm)
         {
             return;
         }
 
-        vm.Refresh();
+        try
+        {
+            await vm.Refresh();
+        }
+        catch
+        {
+            // Swallow exceptions from the initial load; the VM exposes
+            // StatusMessage/error state to the UI directly.
+        }
+
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        _refreshTimer.Tick += (_, _) => vm.Refresh();
+        _refreshTimer.Tick += async (_, _) =>
+        {
+            try
+            {
+                await vm.Refresh();
+            }
+            catch
+            {
+                // Swallow so a transient error does not bubble to
+                // DispatcherUnhandledException and show a repeated error dialog.
+            }
+        };
         _refreshTimer.Start();
     }
 

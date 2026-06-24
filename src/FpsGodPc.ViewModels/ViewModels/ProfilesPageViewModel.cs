@@ -9,6 +9,14 @@ namespace FpsGodPc.App.ViewModels;
 
 public partial class ProfilesPageViewModel(AppServices services, LocalizationService l10n) : PageViewModelBase(services, l10n, "profiles")
 {
+    // Guards against concurrent full refreshes.
+    private bool _isRefreshing;
+
+    // Tracks whether we have loaded profiles at least once.  After the first
+    // full load the timer tick only does a cheap watcher-status update instead
+    // of re-running the expensive recursive Steam/install detection.
+    private bool _profilesLoaded;
+
     public ObservableCollection<WatcherProfile> Profiles { get; } = [];
 
     [ObservableProperty]
@@ -28,20 +36,78 @@ public partial class ProfilesPageViewModel(AppServices services, LocalizationSer
         UpdateWatcherStatus();
     }
 
+    /// <summary>
+    /// Full refresh: re-runs expensive install detection and reloads all profiles.
+    /// Called on first navigation and on explicit user-triggered refresh.
+    /// </summary>
     [RelayCommand]
-    public void Refresh()
+    public async Task Refresh()
     {
-        Profiles.Clear();
-        foreach (var profile in Services.ListProfiles())
+        await RefreshFullAsync();
+    }
+
+    /// <summary>
+    /// Cheap tick update: only refreshes watcher status and applied/active flags
+    /// from already-cached profile data without re-running the Steam scan.
+    /// Falls back to a full refresh if profiles have never been loaded.
+    /// </summary>
+    public async Task RefreshTick()
+    {
+        if (!_profilesLoaded)
         {
-            Profiles.Add(profile);
+            // First tick before load completed — do a full refresh instead.
+            await RefreshFullAsync();
+            return;
         }
 
-        UpdateWatcherStatus();
+        if (_isRefreshing)
+        {
+            // A full refresh is already in flight; skip this tick entirely.
+            return;
+        }
+
+        // Cheap path: update watcher status and the applied/active flags on
+        // each already-known profile.  GetWatcherStatus() is a simple DB/memory
+        // read — no PowerShell, no recursive filesystem scan.
+        await UiDispatch.InvokeAsync(() =>
+        {
+            UpdateWatcherStatus();
+        });
+    }
+
+    private async Task RefreshFullAsync()
+    {
+        if (_isRefreshing)
+        {
+            return;
+        }
+
+        _isRefreshing = true;
+        try
+        {
+            var profileData = await Task.Run(() => Services.ListProfiles());
+
+            await UiDispatch.InvokeAsync(() =>
+            {
+                Profiles.Clear();
+                foreach (var profile in profileData)
+                {
+                    Profiles.Add(profile);
+                }
+
+                UpdateWatcherStatus();
+            });
+
+            _profilesLoaded = true;
+        }
+        finally
+        {
+            _isRefreshing = false;
+        }
     }
 
     [RelayCommand]
-    public void ToggleWatcher(string? profileId)
+    public async Task ToggleWatcher(string? profileId)
     {
         if (string.IsNullOrWhiteSpace(profileId))
         {
@@ -55,20 +121,22 @@ public partial class ProfilesPageViewModel(AppServices services, LocalizationSer
         }
 
         var updated = !profile.WatcherEnabled;
-        StatusMessage = Services.SetProfileWatcher(profileId, updated).Message;
-        Refresh();
+        var result = await Task.Run(() => Services.SetProfileWatcher(profileId, updated));
+        StatusMessage = result.Message;
+        await RefreshFullAsync();
     }
 
     [RelayCommand]
-    public void ApplyNow(string? profileId)
+    public async Task ApplyNow(string? profileId)
     {
         if (string.IsNullOrWhiteSpace(profileId))
         {
             return;
         }
 
-        StatusMessage = Services.ApplyProfile(profileId).Message;
-        Refresh();
+        var result = await Task.Run(() => Services.ApplyProfile(profileId));
+        StatusMessage = result.Message;
+        await RefreshFullAsync();
     }
 
     private void UpdateWatcherStatus()

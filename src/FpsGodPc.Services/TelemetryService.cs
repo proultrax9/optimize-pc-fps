@@ -18,32 +18,46 @@ public sealed class TelemetrySnapshot
     public int ProcessCount { get; set; }
 }
 
+/// <summary>
+/// Collects a telemetry snapshot on each Collect() call.
+///
+/// CONSTRUCTOR PARAMETERS (for DI integrator):
+///   - ProcessRunner runner      — existing dependency, registered as singleton
+///   - HardwareMonitorService hardwareMonitor — NEW singleton; register with:
+///         services.AddSingleton&lt;HardwareMonitorService&gt;();
+///     before the TelemetryService registration. HardwareMonitorService is IDisposable
+///     so the DI container will dispose it correctly when the app exits.
+/// </summary>
 public sealed class TelemetryService
 {
     private readonly ProcessRunner _runner;
+    private readonly HardwareMonitorService _hardwareMonitor;
     private readonly HardwareInfo _hardware;
-    private bool _hardwareReady;
 
-    public TelemetryService(ProcessRunner runner)
+    // Lazy-init guard: Hardware.Info WMI calls are deferred to first Collect().
+    // volatile: Collect() runs on thread-pool threads (Dashboard Task.Run), so these
+    // flags must be visible across threads without relying on the init lock at read time.
+    private volatile bool _hardwareInitialized;
+    private volatile bool _hardwareReady;
+    private readonly object _initLock = new();
+
+    public TelemetryService(ProcessRunner runner, HardwareMonitorService hardwareMonitor)
     {
         _runner = runner;
+        _hardwareMonitor = hardwareMonitor;
+        // Only allocate the HardwareInfo object here — do NOT call any Refresh*
+        // methods in the constructor. Those are heavy WMI calls deferred to first use.
         _hardware = new HardwareInfo();
-        try
-        {
-            _hardware.RefreshCPUList();
-            _hardware.RefreshVideoControllerList();
-            _hardware.RefreshMemoryStatus();
-            _hardwareReady = true;
-        }
-        catch
-        {
-            _hardwareReady = false;
-        }
     }
 
     public TelemetrySnapshot Collect()
     {
         var snapshot = new TelemetrySnapshot();
+
+        // ------------------------------------------------------------------
+        // Hardware.Info: lazy one-time init + per-call refresh
+        // ------------------------------------------------------------------
+        EnsureHardwareInitialized();
 
         try
         {
@@ -75,6 +89,9 @@ public sealed class TelemetryService
             // WMI/Hardware.Info may fail on some systems.
         }
 
+        // ------------------------------------------------------------------
+        // CPU usage via WMI (more reliable than Hardware.Info PercentProcessorTime)
+        // ------------------------------------------------------------------
         try
         {
             using var searcher = new ManagementObjectSearcher("SELECT LoadPercentage FROM Win32_Processor");
@@ -92,6 +109,33 @@ public sealed class TelemetryService
             // ignore
         }
 
+        // ------------------------------------------------------------------
+        // Real GPU load + CPU/GPU temperatures via LibreHardwareMonitor
+        // ------------------------------------------------------------------
+        try
+        {
+            var readings = _hardwareMonitor.Read();
+
+            snapshot.CpuTempC = readings.CpuTempC;
+            snapshot.GpuTempC = readings.GpuTempC;
+            snapshot.GpuUsagePct = readings.GpuLoadPct;
+
+            // If LibreHardwareMonitor detected a GPU name and Hardware.Info did not,
+            // use the LibreHardwareMonitor name as a fallback.
+            if (!string.IsNullOrWhiteSpace(readings.GpuName)
+                && (snapshot.GpuName == "—" || string.IsNullOrWhiteSpace(snapshot.GpuName)))
+            {
+                snapshot.GpuName = readings.GpuName!;
+            }
+        }
+        catch
+        {
+            // LibreHardwareMonitor is always defensive internally, but guard here too.
+        }
+
+        // ------------------------------------------------------------------
+        // Power plan + process count
+        // ------------------------------------------------------------------
         try
         {
             snapshot.PowerPlan = ReadPowerPlan();
@@ -103,6 +147,46 @@ public sealed class TelemetryService
 
         snapshot.ProcessCount = Process.GetProcesses().Length;
         return snapshot;
+    }
+
+    // ------------------------------------------------------------------
+    // Private helpers
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Performs the initial Hardware.Info WMI enumeration once, lazily, on first
+    /// Collect() call rather than in the constructor to keep app startup fast.
+    /// </summary>
+    private void EnsureHardwareInitialized()
+    {
+        if (_hardwareInitialized)
+        {
+            return;
+        }
+
+        lock (_initLock)
+        {
+            if (_hardwareInitialized)
+            {
+                return;
+            }
+
+            try
+            {
+                _hardware.RefreshCPUList();
+                _hardware.RefreshVideoControllerList();
+                _hardware.RefreshMemoryStatus();
+                _hardwareReady = true;
+            }
+            catch
+            {
+                _hardwareReady = false;
+            }
+            finally
+            {
+                _hardwareInitialized = true;
+            }
+        }
     }
 
     private string ReadPowerPlan()

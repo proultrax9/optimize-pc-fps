@@ -1,0 +1,26 @@
+<UserControl x:Class="FpsGodPc.App.Controls.MetricTile"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Border Background="{StaticResource CardBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="12">
+        <StackPanel>
+            <TextBlock Text="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       FontSize="10"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       Margin="0,6,0,0"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="{Binding Detail, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                       Margin="0,4,0,0"
+                       FontSize="11"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+    </Border>
+</UserControl>

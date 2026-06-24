@@ -5,6 +5,8 @@ namespace FpsGodPc.Services;
 
 public sealed class ProcessRunner
 {
+    private const int DefaultTimeoutMs = 60_000;
+
     public string RunPowerShell(string script) =>
         RunCommand("powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script);
 
@@ -29,9 +31,26 @@ public sealed class ProcessRunner
             throw new InvalidOperationException($"Failed to start process: {program}");
         }
 
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
+        // Read stdout and stderr concurrently to prevent deadlock when either
+        // pipe buffer fills while we are blocking on the other pipe.
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+
+        // Wait for both reads to finish, with an overall timeout.
+        var bothCompleted = Task.WhenAll(stdoutTask, stderrTask)
+            .Wait(DefaultTimeoutMs);
+
+        if (!bothCompleted)
+        {
+            try { process.Kill(entireProcessTree: true); } catch { /* best-effort */ }
+            throw new InvalidOperationException(
+                $"Process '{program}' did not complete within {DefaultTimeoutMs / 1000}s and was killed.");
+        }
+
         process.WaitForExit();
+
+        var stdout = stdoutTask.Result;
+        var stderr = stderrTask.Result;
 
         if (process.ExitCode == 0)
         {

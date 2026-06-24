@@ -1,0 +1,38 @@
+<UserControl x:Class="FpsGodPc.App.Views.TweaksPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:FpsGodPc.App.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28,24,28,28">
+            <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="{Binding Subtitle}" Style="{StaticResource PageSubtitle}"/>
+
+            <Border Style="{StaticResource CardSurface}" Margin="0,0,0,16" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="CATEGORY" Style="{StaticResource SectionLabel}" Margin="0,0,0,8"/>
+                    <ComboBox ItemsSource="{Binding Categories}"
+                              SelectedItem="{Binding SelectedCategory}"
+                              DisplayMemberPath="Label"
+                              MinWidth="260"
+                              MinHeight="42"
+                              HorizontalAlignment="Left"/>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource AccentBrush}" Margin="0,0,0,10" TextWrapping="Wrap"/>
+
+            <ItemsControl ItemsSource="{Binding Tweaks}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <controls:TweakRow Title="{Binding Name}"
+                                           Description="{Binding Description}"
+                                           Risk="{Binding RiskTier}"
+                                           IsToggled="{Binding IsEnabled}"
+                                           ToggleCommand="{Binding ToggleCommand}"
+                                           Margin="0,0,0,10"/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

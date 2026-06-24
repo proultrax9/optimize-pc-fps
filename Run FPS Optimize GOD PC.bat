@@ -9,11 +9,11 @@ if errorlevel 1 (
   exit /b
 )
 
-if exist "release\FPS Optimize GOD PC.exe" (
-  start "" "release\FPS Optimize GOD PC.exe"
+if exist "release\app\FPS Optimize GOD PC.exe" (
+  start "" "release\app\FPS Optimize GOD PC.exe"
 ) else if exist "src\FpsGodPc.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\FPS Optimize GOD PC.exe" (
   start "" "src\FpsGodPc.App\bin\Release\net8.0-windows10.0.19041.0\win-x64\FPS Optimize GOD PC.exe"
 ) else (
-  echo Run build.bat first to create release\FPS Optimize GOD PC.exe
+  echo Run build.bat first to create release\app\FPS Optimize GOD PC.exe
   pause
 )

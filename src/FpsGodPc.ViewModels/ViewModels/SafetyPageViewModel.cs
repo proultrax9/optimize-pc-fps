@@ -84,24 +84,33 @@ public partial class SafetyPageViewModel(AppServices services, LocalizationServi
     }
 
     [RelayCommand]
-    public void Refresh()
+    public async Task Refresh()
     {
-        var safety = Services.GetSafetyStatus();
-        AppliedCount = safety.AppliedTweakCount;
-        KnownGoodId = safety.LastKnownGoodId;
-        HasPendingRevert = safety.PendingRevert;
-        PendingRevertMessage = safety.PendingRevert && !string.IsNullOrWhiteSpace(safety.PendingReason)
-            ? L10n.PendingRevertBanner(safety.PendingReason!)
-            : null;
-        UpdateSummaries();
-
-        Snapshots.Clear();
-        foreach (var snapshot in Services.ListSnapshots())
+        var (safety, snapshots) = await Task.Run(() =>
         {
-            Snapshots.Add(snapshot);
-        }
+            var status = Services.GetSafetyStatus();
+            var list = Services.ListSnapshots();
+            return (status, list);
+        });
 
-        RefreshGuardianTweaks();
+        await UiDispatch.InvokeAsync(() =>
+        {
+            AppliedCount = safety.AppliedTweakCount;
+            KnownGoodId = safety.LastKnownGoodId;
+            HasPendingRevert = safety.PendingRevert;
+            PendingRevertMessage = safety.PendingRevert && !string.IsNullOrWhiteSpace(safety.PendingReason)
+                ? L10n.PendingRevertBanner(safety.PendingReason!)
+                : null;
+            UpdateSummaries();
+
+            Snapshots.Clear();
+            foreach (var snapshot in snapshots)
+            {
+                Snapshots.Add(snapshot);
+            }
+
+            RefreshGuardianTweaks();
+        });
     }
 
     [RelayCommand]
@@ -109,7 +118,7 @@ public partial class SafetyPageViewModel(AppServices services, LocalizationServi
     {
         var label = L10n.T("Manual safety snapshot", "Snapshot ความปลอดภัยด้วยตนเอง");
         StatusMessage = Services.CreateSnapshot(label).Message;
-        Refresh();
+        _ = Refresh();
     }
 
     [RelayCommand]
@@ -123,7 +132,7 @@ public partial class SafetyPageViewModel(AppServices services, LocalizationServi
         }
 
         StatusMessage = Services.RollbackAll().Message;
-        Refresh();
+        _ = Refresh();
     }
 
     [RelayCommand]
@@ -197,7 +206,7 @@ public partial class SafetyPageViewModel(AppServices services, LocalizationServi
         var gate = Services.SpecGate(item.Id);
         if (!gate.Allowed)
         {
-            MessageBox.Show(gate.Message, L10n.ConfirmTitle(), MessageBoxButton.OK, MessageBoxImage.Warning);
+            DialogService.Alert(gate.Message, L10n.ConfirmTitle(), DialogKind.Warning);
             item.RevertToggle();
             return;
         }

@@ -1,0 +1,57 @@
+<UserControl x:Class="FpsGodPc.App.Controls.RadialGauge"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Drawing area -->
+        <Grid Grid.Row="0" MinHeight="90" ClipToBounds="False">
+            <!-- soft green bloom behind the arc -->
+            <Ellipse x:Name="Glow"
+                     Fill="{StaticResource GaugeGlowBrush}"
+                     Opacity="0.55"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Bottom"
+                     IsHitTestVisible="False"/>
+            <Canvas x:Name="ArcCanvas" ClipToBounds="False">
+                <Path x:Name="TrackPath"
+                      Stroke="{StaticResource GaugeTrackBrush}"
+                      StrokeThickness="14"
+                      StrokeStartLineCap="Round"
+                      StrokeEndLineCap="Round"/>
+                <Path x:Name="ValuePath"
+                      Stroke="{StaticResource AccentBrush}"
+                      StrokeThickness="14"
+                      StrokeStartLineCap="Round"
+                      StrokeEndLineCap="Round"/>
+            </Canvas>
+
+            <!-- center readout -->
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,0,2">
+                <TextBlock x:Name="ValueText"
+                           FontFamily="{StaticResource DisplayFont}"
+                           FontSize="24" FontWeight="Bold"
+                           Foreground="{StaticResource TextBrush}"
+                           VerticalAlignment="Bottom"/>
+                <TextBlock x:Name="UnitText"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           FontSize="12" Margin="3,0,0,5"
+                           VerticalAlignment="Bottom"/>
+            </StackPanel>
+        </Grid>
+
+        <TextBlock x:Name="GaugeLabel"
+                   Grid.Row="1"
+                   HorizontalAlignment="Center"
+                   Margin="0,6,0,0"
+                   FontSize="11" FontWeight="Bold"
+                   Foreground="{StaticResource MutedBrush}"/>
+    </Grid>
+</UserControl>

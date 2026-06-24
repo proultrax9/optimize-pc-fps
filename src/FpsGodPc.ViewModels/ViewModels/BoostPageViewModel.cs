@@ -11,11 +11,17 @@ namespace FpsGodPc.App.ViewModels;
 public partial class BoostPageViewModel : PageViewModelBase
 {
     private readonly Func<string?>? _openExpertChecklist;
+    private readonly Action<string>? _navigate;
 
-    public BoostPageViewModel(AppServices services, LocalizationService l10n, Func<string?>? openExpertChecklist = null)
+    public BoostPageViewModel(
+        AppServices services,
+        LocalizationService l10n,
+        Func<string?>? openExpertChecklist = null,
+        Action<string>? navigate = null)
         : base(services, l10n, "boost")
     {
         _openExpertChecklist = openExpertChecklist;
+        _navigate = navigate;
     }
 
     public ObservableCollection<PresetBundle> Presets { get; } = [];
@@ -27,10 +33,13 @@ public partial class BoostPageViewModel : PageViewModelBase
     private string restartAsAdminLabel = string.Empty;
 
     [ObservableProperty]
-    private string tweakCountFormat = string.Empty;
+    private string openTweaksLabel = string.Empty;
 
     [ObservableProperty]
-    private string applyPresetLabel = string.Empty;
+    private string moreTweaksLabel = string.Empty;
+
+    [ObservableProperty]
+    private string restoreRecommendedLabel = string.Empty;
 
     [RelayCommand]
     public void Refresh()
@@ -47,10 +56,14 @@ public partial class BoostPageViewModel : PageViewModelBase
     {
         base.ApplyPageStrings();
         RestartAsAdminLabel = L10n.RestartAsAdmin();
-        TweakCountFormat = L10n.BoostTweakCountFormat;
-        ApplyPresetLabel = L10n.BoostApplyPreset;
+        OpenTweaksLabel = L10n.BoostOpenTweaks;
+        MoreTweaksLabel = L10n.BoostMoreTweaks;
+        RestoreRecommendedLabel = L10n.BoostRestoreRecommended;
         Refresh();
     }
+
+    [RelayCommand]
+    private void OpenTweaks() => _navigate?.Invoke("tweaks");
 
     [RelayCommand]
     public void RestartAsAdmin()
@@ -69,12 +82,12 @@ public partial class BoostPageViewModel : PageViewModelBase
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, L10n.T("Elevation Failed", "ยกระดับสิทธิ์ไม่สำเร็จ"), MessageBoxButton.OK, MessageBoxImage.Error);
+            DialogService.Alert(ex.Message, L10n.T("Elevation Failed", "ยกระดับสิทธิ์ไม่สำเร็จ"), DialogKind.Error);
         }
     }
 
     [RelayCommand]
-    public void Apply(string? presetId)
+    public async Task Apply(string? presetId)
     {
         if (string.IsNullOrWhiteSpace(presetId))
         {
@@ -120,7 +133,7 @@ public partial class BoostPageViewModel : PageViewModelBase
             var rpMsg = L10n.T("Create a restore point before applying this boost?", "สร้างจุดคืนค่าก่อนใช้ Boost นี้ไหม?");
             if (Confirm(rpMsg))
             {
-                _ = Services.CreateRestorePoint($"Before {preset.Name}");
+                await Task.Run(() => Services.CreateRestorePoint($"Before {preset.Name}"));
             }
         }
 
@@ -131,15 +144,14 @@ public partial class BoostPageViewModel : PageViewModelBase
             return;
         }
 
-        var result = Services.ApplyBoostPreset(presetId);
+        var result = await Task.Run(() => Services.ApplyBoostPreset(presetId));
         StatusMessage = result.Message;
         if (result.Failed.Count > 0)
         {
-            MessageBox.Show(
+            DialogService.Alert(
                 string.Join(Environment.NewLine, result.Failed.Select(f => $"{L10n.TweakName(f.Id)}: {L10n.LocalizeResult(f.Error)}")),
                 L10n.T("Some Tweaks Failed", "บางทวีคล้มเหลว"),
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+                DialogKind.Warning);
         }
     }
 

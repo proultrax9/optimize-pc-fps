@@ -4,7 +4,6 @@ using FpsGodPc.App.Navigation;
 using FpsGodPc.Core.Localization;
 using FpsGodPc.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -16,6 +15,10 @@ public partial class ShellViewModel : ViewModelBase
     private readonly AppServices _services;
     private readonly LocalizationService _l10n;
     private readonly Dictionary<string, Func<PageViewModelBase>> _pageFactory;
+
+    // Holds the currently displayed transient page VM so we can dispose it
+    // when navigating away (prevents the LocalizationService event-leak).
+    private PageViewModelBase? _currentPageVm;
 
     public ShellViewModel(IServiceProvider serviceProvider, AppServices services, LocalizationService l10n)
     {
@@ -45,15 +48,20 @@ public partial class ShellViewModel : ViewModelBase
         ApplyShellStrings();
         BuildNavigation();
         StartConfirmTimerPolling();
-        Navigate("dashboard");
+        Application.Current.Dispatcher.BeginInvoke(
+            DispatcherPriority.Background,
+            () => _ = Navigate("dashboard"));
     }
 
     private DispatcherTimer? _confirmTimer;
     private int _confirmSecondsLeft;
     private bool _confirmCountdownActive;
 
+    // When false the confirm timer skips the DB read entirely, so the UI thread
+    // is not hit with a DB round-trip every second during normal operation.
+    private bool _pendingRevertKnown;
+
     public List<NavSectionViewModel> NavigationSections { get; } = [];
-    public ObservableCollection<string> Languages { get; } = [ "en", "th" ];
 
     [ObservableProperty]
     private PageViewModelBase? currentPage;
@@ -62,28 +70,7 @@ public partial class ShellViewModel : ViewModelBase
     private bool isElevated;
 
     [ObservableProperty]
-    private string languageLabel = string.Empty;
-
-    [ObservableProperty]
     private string dismissWatchdogLabel = string.Empty;
-
-    private string _selectedLanguage = string.Empty;
-    public string SelectedLanguage
-    {
-        get => _selectedLanguage;
-        set
-        {
-            if (!SetProperty(ref _selectedLanguage, value) || string.IsNullOrWhiteSpace(value))
-            {
-                return;
-            }
-
-            var settings = _services.GetAppSettings();
-            settings.Language = value;
-            _services.SaveAppSettings(settings);
-            _l10n.SetLanguage(value);
-        }
-    }
 
     [ObservableProperty]
     private string adminBannerText = string.Empty;
@@ -123,15 +110,23 @@ public partial class ShellViewModel : ViewModelBase
     private string confirmTimerRevertLabel = string.Empty;
 
     [RelayCommand]
-    public void Navigate(string? key)
+    public async Task Navigate(string? key)
     {
         if (string.IsNullOrWhiteSpace(key) || !_pageFactory.TryGetValue(key, out var factory))
         {
             return;
         }
 
+        // Dispose the previous transient page VM to unsubscribe LanguageChanged.
+        var previous = _currentPageVm;
+
         var page = factory();
+        _currentPageVm = page;
         CurrentPage = page;
+
+        // Dispose after we have assigned the new page so the UI already shows
+        // the new page before we do any cleanup work.
+        previous?.Dispose();
 
         foreach (var nav in NavigationSections.SelectMany(s => s.Items))
         {
@@ -140,15 +135,17 @@ public partial class ShellViewModel : ViewModelBase
 
         switch (page)
         {
-            case DashboardPageViewModel vm: vm.Refresh(); break;
-            case BenchmarkPageViewModel vm: vm.Refresh(); break;
-            case ScannerPageViewModel vm: vm.RunScan(); break;
+            case DashboardPageViewModel vm: await vm.Refresh(); break;
+            case BenchmarkPageViewModel vm: await vm.Refresh(); break;
+            case ScannerPageViewModel vm: await vm.RunScan(); break;
             case TweaksPageViewModel vm: vm.Refresh(); break;
             case BoostPageViewModel vm: vm.Refresh(); break;
-            case ProfilesPageViewModel vm: vm.Refresh(); break;
-            case SafetyPageViewModel vm: vm.Refresh(); break;
-            case RestorePageViewModel vm: vm.Refresh(); break;
-            case GamesPageViewModel vm: vm.Refresh(); break;
+            case ProfilesPageViewModel vm: await vm.Refresh(); break;
+            case SafetyPageViewModel vm: await vm.Refresh(); break;
+            case RestorePageViewModel vm: await vm.Refresh(); break;
+            // GamesPageViewModel.Refresh is now async; fire-and-forget so
+            // Navigate returns immediately and the page loads in the background.
+            case GamesPageViewModel vm: _ = vm.Refresh(); break;
             case SettingsPageViewModel vm: vm.Refresh(); break;
         }
     }
@@ -163,7 +160,7 @@ public partial class ShellViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, _l10n.T("Elevation Failed", "ยกระดับสิทธิ์ไม่สำเร็จ"), MessageBoxButton.OK, MessageBoxImage.Error);
+            DialogService.Alert(ex.Message, _l10n.T("Elevation Failed", "ยกระดับสิทธิ์ไม่สำเร็จ"), DialogKind.Error);
         }
     }
 
@@ -178,6 +175,7 @@ public partial class ShellViewModel : ViewModelBase
     public void KeepPendingTweaks()
     {
         _services.ConfirmPendingRevert();
+        _pendingRevertKnown = false;
         ResetConfirmTimer();
     }
 
@@ -185,6 +183,7 @@ public partial class ShellViewModel : ViewModelBase
     public void RejectPendingTweaks()
     {
         _services.RejectPendingRevert();
+        _pendingRevertKnown = false;
         ResetConfirmTimer();
     }
 
@@ -197,12 +196,33 @@ public partial class ShellViewModel : ViewModelBase
 
     private void TickConfirmTimer()
     {
+        // Fast path: if no countdown is active and we have not seen a pending
+        // revert recently, skip the DB read entirely.  This avoids a DB
+        // round-trip on every second during normal (non-revert) operation.
+        if (!_confirmCountdownActive && !_pendingRevertKnown)
+        {
+            // Poll the DB at a much lower rate: only every 10 seconds.
+            // We achieve this by counting ticks via _confirmSecondsLeft which
+            // is otherwise idle.  Use a separate lightweight counter.
+            _idlePollTicks++;
+            if (_idlePollTicks < 10)
+            {
+                return;
+            }
+
+            _idlePollTicks = 0;
+        }
+
         var safety = _services.GetSafetyStatus();
         if (!safety.PendingRevert)
         {
+            _pendingRevertKnown = false;
             ResetConfirmTimer();
             return;
         }
+
+        _pendingRevertKnown = true;
+        _idlePollTicks = 0;
 
         if (!_confirmCountdownActive)
         {
@@ -221,12 +241,16 @@ public partial class ShellViewModel : ViewModelBase
         if (_confirmSecondsLeft <= 0)
         {
             _services.RejectPendingRevert();
+            _pendingRevertKnown = false;
             ResetConfirmTimer();
             return;
         }
 
         _confirmSecondsLeft--;
     }
+
+    // Tick counter used to reduce DB polling frequency during idle periods.
+    private int _idlePollTicks;
 
     private void ResetConfirmTimer()
     {
@@ -245,10 +269,8 @@ public partial class ShellViewModel : ViewModelBase
     {
         AdminBannerText = _l10n.AdminBanner();
         RestartAdminLabel = _l10n.RestartAsAdmin();
-        LanguageLabel = _l10n.ShellLanguage;
         DismissWatchdogLabel = _l10n.DismissWatchdog;
         WatchdogMessage = _services.GetCrashWatchdogMessage() is not null ? _l10n.WatchdogMessage() : null;
-        SelectedLanguage = _l10n.Language;
     }
     private void BuildNavigation()
     {

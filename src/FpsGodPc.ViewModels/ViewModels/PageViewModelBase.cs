@@ -5,9 +5,10 @@ using System.Windows;
 
 namespace FpsGodPc.App.ViewModels;
 
-public abstract partial class PageViewModelBase : ViewModelBase
+public abstract partial class PageViewModelBase : ViewModelBase, IDisposable
 {
     private readonly string _pageKey;
+    private bool _disposed;
 
     protected PageViewModelBase(AppServices services, LocalizationService l10n, string pageKey)
     {
@@ -39,8 +40,29 @@ public abstract partial class PageViewModelBase : ViewModelBase
 
     protected bool Confirm(string message, string? title = null, MessageBoxImage icon = MessageBoxImage.Warning)
     {
-        return MessageBox.Show(message, title ?? L10n.ConfirmTitle(), MessageBoxButton.YesNo, icon) == MessageBoxResult.Yes;
+        return DialogService.Confirm(message, title ?? L10n.ConfirmTitle(), DialogService.FromImage(icon));
     }
 
     private void OnLanguageChanged() => ApplyPageStrings();
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            L10n.LanguageChanged -= OnLanguageChanged;
+        }
+
+        _disposed = true;
+    }
 }

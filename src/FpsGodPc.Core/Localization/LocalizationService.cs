@@ -4,25 +4,16 @@ namespace FpsGodPc.Core.Localization;
 
 public sealed partial class LocalizationService
 {
-    private string _language = "en";
-
     public event Action? LanguageChanged;
 
-    public string Language => _language;
+    public string Language => "en";
 
     public void SetLanguage(string? language)
     {
-        var next = string.Equals(language, "th", StringComparison.OrdinalIgnoreCase) ? "th" : "en";
-        if (_language == next)
-        {
-            return;
-        }
-
-        _language = next;
-        LanguageChanged?.Invoke();
+        // English-only build.
     }
 
-    public string T(string en, string th) => _language == "th" ? th : en;
+    public string T(string en, string th) => en;
 
     public string Nav(string key) => key switch
     {
@@ -56,7 +47,7 @@ public sealed partial class LocalizationService
         "benchmark" => (T("Benchmark", "เบนช์มาร์ก"), T("Capture before/after performance snapshots.", "บันทึกผลประสิทธิภาพก่อน/หลัง")),
         "scanner" => (T("System Scanner", "สแกนระบบ"), T("Analyze optimization opportunities before applying tweaks.", "วิเคราะห์จุดปรับปรุงก่อนใช้ทวีค")),
         "tweaks" => (T("Tweaks", "ปรับแต่ง"), T("Fine-grained Windows, CPU, GPU, and network tuning.", "ปรับ Windows, CPU, GPU และเครือข่ายทีละรายการ")),
-        "boost" => (T("Boost Presets", "ชุดบูสต์"), T("One-click bundles aligned with risk tolerance.", "ชุดปรับแต่งกดครั้งเดียวตามระดับความเสี่ยง")),
+        "boost" => (T("Boost", "บูสต์"), T("One-click preset bundles. Changes apply to your real system when running as desktop app.", "ชุดบูสต์กดครั้งเดียว — มีผลกับระบบจริงเมื่อรันเป็นแอปเดสก์ท็อป")),
         "profiles" => (T("Profiles", "โปรไฟล์เกม"), T("Auto-apply tweak bundles for specific games.", "ใส่ทวีคอัตโนมัติตามเกม")),
         "safety" => (T("Safety", "ความปลอดภัย"), T("Snapshots, watchdog status, and guardian controls.", "Snapshot, watchdog และ Guardian")),
         "cleaner" => (T("Cleaner", "ล้างระบบ"), T("Remove stale files and caches that impact smoothness.", "ลบไฟล์และแคชที่ทำให้กระตุก")),
@@ -113,14 +104,49 @@ public sealed partial class LocalizationService
         _ => id
     };
 
-    public string BoostDescription(string id) => id switch
+    public string BoostDescription(string id) => BoostTagline(id);
+
+    public string BoostTagline(string id) => id switch
     {
-        "safe" => T("Safe baseline for daily gaming.", "พื้นฐานปลอดภัยสำหรับเล่นประจำ"),
-        "competitive" => T("Latency-focused esports bundle.", "ชุดลดหน่วงสำหรับอีสปอร์ต"),
-        "extreme" => T("Maximum performance with higher risk.", "ประสิทธิภาพสูงสุด ความเสี่ยงสูง"),
-        "expert" => T("Advisor-only advanced tuning hints.", "คำแนะนำขั้นสูง (ที่ปรึกษา)"),
+        "safe" => T("Low risk · Recommended for everyone", "ความเสี่ยงต่ำ · แนะนำสำหรับทุกคน"),
+        "competitive" => T("FPS + latency · For serious gamers", "FPS + หน่วงต่ำ · สำหรับเกมเมอร์จริงจัง"),
+        "extreme" => T("Maximum gains · Higher instability risk", "ได้สูงสุด · ความเสี่ยงไม่เสถียรสูงขึ้น"),
+        "expert" => T("BIOS / OC advisor · No auto-apply", "คู่มือ BIOS / OC · ไม่ apply อัตโนมัติ"),
         _ => string.Empty
     };
+
+    public string BoostWarning(string id) => id switch
+    {
+        "safe" => T("Safe for most systems. Some background apps may pause temporarily while gaming.",
+            "ปลอดภัยกับระบบส่วนใหญ่ แอปพื้นหลังบางตัวอาจหยุดชั่วคราวขณะเล่นเกม"),
+        "competitive" => T("Adjusts services, registry, and power settings. Xbox Game Bar recording may stop working. Create a restore point first.",
+            "ปรับ services, registry และ power — การบันทึก Game Bar อาจใช้ไม่ได้ ควรสร้าง restore point ก่อน"),
+        "extreme" => T("May cause BSOD, game crashes, or network issues on some systems. Only use with good cooling and a restore point.",
+            "อาจทำให้ BSOD, เกม crash หรือเน็ตมีปัญหาในบางระบบ ใช้เมื่อระบายความร้อนดีและมี restore point"),
+        "expert" => T("Advisor mode only. BIOS, undervolt, and OC changes can brick your system if done wrong.",
+            "โหมดคำแนะนำเท่านั้น การปรับ BIOS, undervolt และ OC ผิดวิธีอาจทำให้ระบบเสียหาย"),
+        _ => string.Empty
+    };
+
+    public string BoostRiskLevel(string id) => id switch
+    {
+        "safe" => "safe",
+        "competitive" => "medium",
+        "extreme" => "high",
+        "expert" => "extreme",
+        _ => "safe"
+    };
+
+    public string BoostRiskLabel(string id) => id switch
+    {
+        "safe" => T("SAFE", "ปลอดภัย"),
+        "competitive" => T("MEDIUM", "ปานกลาง"),
+        "extreme" => T("HIGH", "สูง"),
+        "expert" => T("EXTREME", "สูงสุด"),
+        _ => T("SAFE", "ปลอดภัย")
+    };
+
+    public string BoostIncludes(int count) => T($"INCLUDES {count} TWEAKS", $"รวม {count} ทวีค");
 
     // Common grid headers
     public string GridId => T("ID", "รหัส");
@@ -166,6 +192,17 @@ public sealed partial class LocalizationService
     public string BenchmarkLabelField => T("Label", "ชื่อ");
     public string BenchmarkDuration => T("Duration (s)", "ระยะเวลา (วิ)");
     public string BenchmarkRun => T("Run Benchmark", "เริ่มเบนช์มาร์ก");
+    public string BenchmarkRun3D => "Launch 3D Benchmark";
+    public string BenchmarkHeavenDownloadHint =>
+        "Heaven downloads automatically to your local benchmark folder on first use (~247 MB).";
+    public string BenchmarkNotInstalledMessage =>
+        "Unigine Heaven / Superposition is not installed on this PC.";
+    public string BenchmarkRunningMessage(uint seconds) =>
+        $"3D benchmark running ({seconds}s) — auto-stops and saves when finished.";
+    public string BenchmarkLaunchedMessage =>
+        "Running Heaven fly-through — auto-stops after the duration you set. Results save to History.";
+    public string BenchmarkDownloadingMessage =>
+        "Downloading Space Battle from GitHub (~32 MB)...";
     public string BenchmarkDefaultLabel => T("Before tweaks", "ก่อนปรับแต่ง");
     public string BenchmarkSaved(string label, string source) =>
         T($"Captured benchmark \"{label}\" ({source}).", $"บันทึกเบนช์มาร์ก \"{label}\" ({source})");
@@ -210,6 +247,8 @@ public sealed partial class LocalizationService
     public string BenchmarkCompareFps(string before, string after, string delta) =>
         T($"FPS: {before} → {after} ({delta})", $"FPS: {before} → {after} ({delta})");
     public string BenchmarkCompareNone => T("Run two benchmarks to compare.", "รันเบนช์มาร์ก 2 ครั้งเพื่อเปรียบเทียบ");
+    public string BenchmarkLatestResult(float fps, string source) =>
+        T($"Latest: {fps:F1} FPS ({source}) — run again after tweaks to compare.", $"ล่าสุด: {fps:F1} FPS ({source}) — รันอีกครั้งหลังปรับแต่งเพื่อเปรียบเทียบ");
 
     // Cleaner
     public string CleanerTempFiles => T("Temporary files", "ไฟล์ชั่วคราว");
@@ -224,6 +263,7 @@ public sealed partial class LocalizationService
     // Network
     public string NetworkFlushDns => T("Flush DNS", "ล้าง DNS");
     public string NetworkTuneAdapter => T("Tune Adapter", "ปรับ Adapter");
+    public string NetworkGodModePowerPlan => T("Apply God Mode Power Plan", "เปิดใช้ Power Plan God Mode");
     public string NetworkPingTest => T("Ping Test", "ทดสอบ Ping");
     public string NetworkHostPrefix => T("Host:", "โฮสต์:");
     public string NetworkLatencyPrefix => T("Latency:", "หน่วง:");
@@ -256,7 +296,7 @@ public sealed partial class LocalizationService
     public string SettingsAppDataPrefix => T("App data:", "ข้อมูลแอป:");
     public string SettingsGuardianDataPrefix => T("Guardian data:", "ข้อมูล Guardian:");
     public string SettingsVersionLabel => T("Version", "เวอร์ชัน");
-    public string AppVersion => T("FPS Optimize GOD PC v0.1.1", "FPS Optimize GOD PC v0.1.1");
+    public string AppVersion => "FPS Optimize GOD PC v0.3.0";
 
     // Profiles
     public string ProfilesApply => T("Apply", "ใช้");
@@ -264,8 +304,12 @@ public sealed partial class LocalizationService
 
     // Boost
     public string BoostTweakCountFormat => T("{0} tweaks", "{0} ทวีค");
-    public string BoostApplyPreset => T("Apply Preset", "ใช้ชุดบูสต์");
-    public string BoostViewChecklist => T("View Checklist", "ดู Checklist");
+    public string BoostApplyPreset => T("Apply Boost", "ใช้บูสต์");
+    public string BoostApplyBoost => T("Apply Boost", "ใช้บูสต์");
+    public string BoostViewChecklist => T("View Checklist", "ดูรายการ");
+    public string BoostOpenTweaks => T("Open Tweaks", "เปิด Tweaks");
+    public string BoostMoreTweaks => T("more", "เพิ่มเติม");
+    public string BoostRestoreRecommended => T("Restore point recommended", "แนะนำสร้าง restore point");
     public string BoostExtremeWarning(string name) => T($"Warning: {name} applies high-risk tweaks.", $"คำเตือน: {name} ใช้ทวีคความเสี่ยงสูง");
 
     // Expert guide

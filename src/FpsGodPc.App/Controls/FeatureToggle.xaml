@@ -1,0 +1,93 @@
+<UserControl x:Class="FpsGodPc.App.Controls.FeatureToggle"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root">
+    <Border Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="16,12">
+        <DockPanel>
+            <!-- Pill toggle (right) -->
+            <ToggleButton DockPanel.Dock="Right"
+                          VerticalAlignment="Center"
+                          Margin="14,0,0,0"
+                          Cursor="Hand"
+                          IsChecked="{Binding IsOn, ElementName=Root, Mode=TwoWay}">
+                <ToggleButton.Template>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="track" Width="46" Height="26" CornerRadius="13"
+                                Background="{StaticResource SurfaceAltBrush}"
+                                BorderBrush="{StaticResource BorderStrongBrush}"
+                                BorderThickness="1">
+                            <Ellipse x:Name="thumb" Width="18" Height="18"
+                                     Fill="{StaticResource TextSecondaryBrush}"
+                                     HorizontalAlignment="Left"
+                                     Margin="3,0,0,0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="track" Property="Background" Value="{StaticResource AccentStrongBrush}"/>
+                                <Setter TargetName="track" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                <Setter TargetName="thumb" Property="Fill" Value="#FFFFFFFF"/>
+                                <Setter TargetName="thumb" Property="HorizontalAlignment" Value="Right"/>
+                                <Setter TargetName="thumb" Property="Margin" Value="0,0,3,0"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </ToggleButton.Template>
+            </ToggleButton>
+
+            <!-- Title + description (left) -->
+            <StackPanel VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding Title, ElementName=Root}"
+                               FontFamily="{StaticResource DisplayFont}"
+                               FontSize="14" FontWeight="SemiBold"
+                               Foreground="{StaticResource TextBrush}"
+                               VerticalAlignment="Center"/>
+                    <Border x:Name="RiskBadge"
+                            Margin="8,0,0,0" Padding="7,2"
+                            CornerRadius="4"
+                            VerticalAlignment="Center"
+                            Background="{StaticResource RiskSafeBgBrush}"
+                            BorderBrush="{StaticResource RiskSafeBorderBrush}"
+                            BorderThickness="1">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Risk, ElementName=Root}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock Text="{Binding Risk, ElementName=Root}"
+                                   FontSize="10" FontWeight="Bold"
+                                   Foreground="{StaticResource AccentBrush}"/>
+                    </Border>
+                </StackPanel>
+                <TextBlock Text="{Binding Description, ElementName=Root}"
+                           FontSize="12"
+                           Foreground="{StaticResource TextSecondaryBrush}"
+                           TextWrapping="Wrap"
+                           Margin="0,3,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Description, ElementName=Root}" Value="">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</UserControl>

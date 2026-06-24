@@ -1,4 +1,4 @@
-**English** · [ไทย](README_TH.md)
+**English** · [ไทย (archived)](README_TH.md)
 
 # FPS Optimize GOD PC
 
@@ -7,7 +7,7 @@ Native **WPF (.NET 8)** Windows desktop optimizer combining **FPS Unleashed** (p
 | | |
 |---|---|
 | **Product** | FPS Optimize GOD PC |
-| **Version** | 0.1.0 |
+| **Version** | 0.3.0 |
 | **Stack** | WPF · .NET 8 · C# |
 | **Platform** | Windows 10 / 11 (x64) |
 | **Folder** | `FPS Optimize GOD PC/` |
@@ -26,7 +26,7 @@ Native **WPF (.NET 8)** Windows desktop optimizer combining **FPS Unleashed** (p
 - **Safety Guardian** — SQLite snapshots, spec gate, crash watchdog, benchmark, watcher profiles
 - **Game Watcher** — auto-applies profile tweaks when a watched game starts (background, 2s poll)
 - **PresentMon** — real FPS benchmark when `PresentMon.exe` is in `%LOCALAPPDATA%\fps-god-pc\`
-- **i18n** — English + Thai
+- **i18n** — English
 - **Native WPF UI** — single-file self-contained `.exe`, no Node.js or Rust toolchain needed to run
 
 ## Screenshots
@@ -40,10 +40,12 @@ Native **WPF (.NET 8)** Windows desktop optimizer combining **FPS Unleashed** (p
 ## Release files (.exe)
 
 ```
-Optimize PC/FPS Optimize GOD PC/release/FPS Optimize GOD PC.exe   ← portable single-file
+Optimize PC/FPS Optimize GOD PC/release/app/                    ← full app folder (run the .exe inside)
+Optimize PC/FPS Optimize GOD PC/release/FPS Optimize GOD PC Setup.exe  ← installer
 ```
 
-Rebuild: from `FPS Optimize GOD PC/` run `.\build.bat`
+Rebuild portable folder: `.\build.bat`  
+Rebuild installer: `.\build-installer.ps1`
 
 ## Quick start (dev)
 
