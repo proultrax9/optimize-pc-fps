@@ -1,52 +1,45 @@
 param(
-    [string]$Version = "0.1.0",
-    [string]$Tag = "v0.1.0"
+    [string]$Version = "0.3.0",
+    [string]$Tag = "v0.3.0"
 )
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ReleaseDir = Join-Path $Root "release"
+$Repo = "proultrax9/optimize-pc-fps"
 
 if (-not (Test-Path $ReleaseDir)) {
-    Write-Error "release/ not found. Run build-exe.bat first."
+    Write-Error "release/ not found. Run build.bat then build-installer.ps1 first."
 }
 
-$required = @(
-    "FPS Optimize GOD PC.exe",
+# Publish whichever artifacts exist (installer + portable; .msi is optional).
+$candidates = @(
     "FPS Optimize GOD PC Setup.exe",
+    "FPS Optimize GOD PC.exe",
     "FPS Optimize GOD PC.msi"
 )
-
-foreach ($f in $required) {
-    if (-not (Test-Path (Join-Path $ReleaseDir $f))) {
-        Write-Warning "Missing: $f (optional for partial publish)"
-    }
+$assets = @()
+foreach ($f in $candidates) {
+    $path = Join-Path $ReleaseDir $f
+    if (Test-Path $path) { $assets += $path } else { Write-Warning "Skipping missing asset: $f" }
 }
-
-if (Test-Path (Join-Path $Root ".git")) {
-    git tag -a $Tag -m "FPS Optimize GOD PC v$Version" 2>$null
+if ($assets.Count -eq 0) {
+    Write-Error "No release assets found in release/. Build them first."
 }
 
 $notes = @"
-## FPS Optimize GOD PC v$Version
+## FPS Optimize GOD PC $Tag
 
 ### Downloads
-- FPS Optimize GOD PC.exe (portable)
-- FPS Optimize GOD PC Setup.exe (installer)
-- FPS Optimize GOD PC.msi (Windows Installer)
+- FPS Optimize GOD PC Setup.exe (installer, recommended)
+- FPS Optimize GOD PC.exe (portable, self-contained)
 
 ### Highlights
-- Merged FPS Unleashed + FPS Unlocker
-- Live Monitor with CPU/GPU temp and usage
-- Safety Guardian snapshots and game watcher
+- HyperTune-style UI: top-bar shell, radial-gauge Live Monitor, Game Hub
+- Themed dialogs replacing native message boxes; rebalanced typography
+- Safety Guardian snapshots + game watcher
 "@
 
-gh release create $Tag `
-    --repo "proultrax9/pc-optimize-fps-god-pc" `
-    --title "FPS Optimize GOD PC $Tag" `
-    --notes $notes `
-    (Join-Path $ReleaseDir "FPS Optimize GOD PC.exe") `
-    (Join-Path $ReleaseDir "FPS Optimize GOD PC Setup.exe") `
-    (Join-Path $ReleaseDir "FPS Optimize GOD PC.msi")
+gh release create $Tag --repo $Repo --title "FPS Optimize GOD PC $Tag" --notes $notes $assets
 
-Write-Host "Published: https://github.com/proultrax9/pc-optimize-fps-god-pc/releases/tag/$Tag" -ForegroundColor Green
+Write-Host "Published: https://github.com/$Repo/releases/tag/$Tag" -ForegroundColor Green

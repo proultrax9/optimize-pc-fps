@@ -29,6 +29,10 @@ archive/
 release/
 *.pdb
 
+# Local backups / test output (not part of the repo)
+src_backup_*/
+release-test/
+
 # Editor
 .vscode/*
 !.vscode/extensions.json
